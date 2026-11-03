@@ -77,14 +77,23 @@ window after installation and verify:
 py -3.12 --version
 ```
 
-From the project folder, create a virtual environment if `.venv` does not
-already exist, then install the project requirements:
+From the project folder, create and activate a Windows virtual environment,
+then install the project requirements:
 
 ```powershell
 if (-not (Test-Path .venv\Scripts\python.exe)) { py -3.12 -m venv .venv }
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
+
+If `py` is not recognized, install Python 3.12 with the Python launcher, or
+use `python -m venv .venv` after confirming `python --version` reports Python
+3.12.
+Activation is optional: you can skip `Activate.ps1` and run
+`.\.venv\Scripts\python.exe -m pip install -r requirements.txt` instead.
+If PowerShell blocks the activation script, use that direct command; do not
+change the execution policy just for activation.
 
 The embedding model used by ingestion is downloaded the first time it runs.
 That first ingestion therefore needs internet access.
@@ -94,21 +103,19 @@ That first ingestion therefore needs internet access.
 Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey).
 Keep it private; do not paste it into source code, a README, or a chat message.
 
-Open the project's `.env` file:
+Create a local `.env` from the example if it does not already exist, then
+open it:
 
 ```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 notepad .env
 ```
 
-Add or update these settings, replacing the placeholder with your own key:
+Replace the placeholder values from `.env.example` with your own settings.
 
-```env
-QDRANT_URL=http://127.0.0.1:6333
-LLM_GATEWAY_URL=http://127.0.0.1:4000
-LLM_MODEL=helpdesk-llm
-LLM_API_KEY=
-GEMINI_API_KEY=your_gemini_api_key
-```
+`LLM_API_KEY` is a local secret shared by the RAG CLI and LiteLLM for gateway
+authentication. Generate a strong random value for it; do not use your Gemini
+key for this setting. LiteLLM uses it as its master key.
 
 Save and close Notepad. The `helpdesk-llm` model alias is configured to use
 Gemini in `config\litellm_config.yaml`.
@@ -124,7 +131,9 @@ In the same project folder, start only LiteLLM:
 docker compose -f podman-compose.yml up -d litellm
 ```
 
-The command reads `GEMINI_API_KEY` from `.env` and passes it to the gateway.
+The command reads `GEMINI_API_KEY` and `LLM_API_KEY` from `.env` and passes
+them to the gateway. `LLM_API_KEY` is required; Compose reports an error if it
+is missing or empty.
 Check the service and, if it is still starting, inspect its logs:
 
 ```powershell

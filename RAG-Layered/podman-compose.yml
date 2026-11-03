@@ -11,7 +11,7 @@ services:
       - ./config/litellm_config.yaml:/app/config.yaml:z
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - LLM_API_KEY=${LLM_API_KEY}
+      - LITELLM_MASTER_KEY=${LLM_API_KEY:?Set LLM_API_KEY in .env}
     entrypoint: ["litellm"]
     command: ["--config", "/app/config.yaml", "--port", "4000"]
 

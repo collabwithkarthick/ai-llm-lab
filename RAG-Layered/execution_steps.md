@@ -3,6 +3,20 @@
 Run these commands in PowerShell from the RAG project folder. Complete
 [setup_instructions.md](./setup_instructions.md) first. No web app is required.
 
+LiteLLM requires two separate credentials in the local `.env` file:
+
+- `GEMINI_API_KEY` is the key LiteLLM uses to call Gemini.
+- `LLM_API_KEY` is a strong, independently generated secret used by the CLI
+  and LiteLLM to authenticate requests to the local gateway.
+
+Do not use the Gemini key as `LLM_API_KEY`, and never commit or share either
+key. If you change either key, recreate the gateway so it picks up the new
+values:
+
+```powershell
+docker compose -f podman-compose.yml up -d --force-recreate litellm
+```
+
 ## 1. Confirm Qdrant and Gemini gateway are running
 
 ```powershell
@@ -137,14 +151,25 @@ the stored Qdrant data.
 
 ## Troubleshooting
 
+- **`.venv\Scripts\python.exe` is not recognized:** Windows virtual
+  environments use `Scripts`; Linux/WSL environments use `bin` and cannot be
+  run from Windows PowerShell. Follow the virtual-environment steps in
+  [setup_instructions.md](./setup_instructions.md) to create a Windows
+  environment. The existing environment is renamed, not deleted.
 - **Docker command not found:** restart PowerShell after installing Docker
   Desktop, and make sure Docker Desktop is running.
 - **Qdrant connection refused:** check `docker compose -f
   qdrant-docker-compose.yml ps` and inspect logs with
   `docker compose -f qdrant-docker-compose.yml logs --tail 80 qdrant`.
-- **LiteLLM cannot start:** check that `.env` contains a valid
-  `GEMINI_API_KEY`, then inspect
+- **LiteLLM cannot start due to a missing master key:** set a strong random
+  `LLM_API_KEY` in `.env`, then recreate the gateway with
+  `docker compose -f podman-compose.yml up -d --force-recreate litellm`.
+  Also check that `.env` contains a valid `GEMINI_API_KEY`, then inspect
   `docker compose -f podman-compose.yml logs --tail 80 litellm`.
+- **LiteLLM rejects a request parameter:** `config\litellm_config.yaml` sets
+  `drop_params: true` so unsupported parameters are omitted. Recreate LiteLLM
+  to load config changes:
+  `docker compose -f podman-compose.yml up -d --force-recreate litellm`.
 - **CLI reports an LLM gateway error:** confirm LiteLLM is running and `.env`
   has `LLM_GATEWAY_URL=http://127.0.0.1:4000` and
   `LLM_MODEL=helpdesk-llm`.
