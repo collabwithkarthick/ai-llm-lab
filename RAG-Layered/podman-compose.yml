@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Enterprise API Gateway
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm-gateway
+    ports:
+      - "127.0.0.1:4000:4000"
+    volumes:
+      - ./config/litellm_config.yaml:/app/config.yaml:z
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - LLM_API_KEY=${LLM_API_KEY}
+    entrypoint: ["litellm"]
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+
+  # Vector Database for RAG
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant-db
+    ports:
+      - "127.0.0.1:6333:6333"
+      - "127.0.0.1:6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+
+volumes:
+  qdrant_storage:

@@ -1,0 +1,5 @@
+model_list:
+  - model_name: helpdesk-llm
+    litellm_params:
+      model: gemini/gemini-3.6-flash
+      api_key: "os.environ/GEMINI_API_KEY"

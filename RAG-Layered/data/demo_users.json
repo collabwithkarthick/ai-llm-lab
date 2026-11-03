@@ -1,0 +1,9 @@
+{
+  "it_only_demo": {
+    "salt": "1c0ae1e5063a5e6f93f08c5835ed5d52",
+    "password_hash": "c27a1fd1a65ce86a4157c09f711611787236f53057a9f0469f6a67439ed7c128",
+    "groups": [
+      "it"
+    ]
+  }
+}
