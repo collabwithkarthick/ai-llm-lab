@@ -3,6 +3,10 @@
 venv/
 env/
 
+# Local secrets
+.env
+.env.*
+!.env.example
 
 # Python bytecode and caches
 __pycache__/
