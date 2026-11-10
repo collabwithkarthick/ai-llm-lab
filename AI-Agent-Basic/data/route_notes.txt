@@ -1,0 +1,3 @@
+The sample route is 62.5 kilometers long.
+Convert its distance to miles using a conversion factor found through web search.
+Round the final distance to one decimal place.
