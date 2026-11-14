@@ -24,10 +24,11 @@ flowchart TD
     K2 --> K3[("SQLite: employees")]
     K2 --> K4["create_support_ticket"]
     K4 --> K5[("SQLite: support_tickets")]
-    K3 --> K6["Return employee, ticket, and summary"]
+    K3 --> K6["Send request, HR context,<br/>and limited result fields to LiteLLM"]
     K5 --> K6
+    K6 --> K7["LLM-generated IT summary<br/>(or report partial success)"]
     J3 --> L["aggregate_response"]
-    K6 --> L
+    K7 --> L
     L --> M["Supervisor result"]
     M --> N["Print final response and orchestration logs"]
 ```
@@ -55,10 +56,14 @@ flowchart TD
    ID, requested item, and dollar amount from the input. It then invokes
    `get_employee_info` and `create_support_ticket` from
    [`src/tools/mcp_tools.py`](./src/tools/mcp_tools.py). These functions read
-   and write the local `data/enterprise.db` database.
+   and write the local `data/enterprise.db` database. After ticket creation,
+   the IT agent sends the request, selected employee/ticket fields, and HR
+   context to the RAG-Layered LiteLLM gateway for a concise Gemini-generated
+   summary. The model does not execute tools or approve tickets.
 6. **Assemble and print the result.** The supervisor combines HR context and
    IT output into one response, marks the workflow completed, and `main.py`
-   prints the response and logs.
+   prints the response and logs. A gateway failure after ticket creation is
+   reported as a partial success including the ticket ID.
 
 ## Example request
 

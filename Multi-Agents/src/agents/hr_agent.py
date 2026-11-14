@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 import logging
+import os
+from pathlib import Path
 from typing import Any
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +34,12 @@ class HRPolicyAgent:
 
     def __init__(
         self,
-        qdrant_url: str = "http://localhost:6333",
+        qdrant_url: str | None = None,
         collection_name: str = "enterprise_policies",
         embedding_model: str = "BAAI/bge-small-en-v1.5",
         vector_size: int = 384,
     ) -> None:
-        self.qdrant_url = qdrant_url
+        self.qdrant_url = qdrant_url or os.getenv("QDRANT_URL", "http://localhost:6333")
         self.collection_name = collection_name
         self.embedding_model = embedding_model
         self.vector_size = vector_size

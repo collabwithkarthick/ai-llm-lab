@@ -201,6 +201,7 @@ def setup_rag_system() -> BaseRetriever:
     vector_store = InMemoryVectorStore.from_documents(document_chunks, embeddings)
     return vector_store.as_retriever(
         search_type="similarity",
+        # Return the five most similar document chunks for each query.
         search_kwargs={"k": 5},
     )
 

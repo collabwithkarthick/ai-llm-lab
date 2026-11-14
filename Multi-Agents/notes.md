@@ -69,10 +69,15 @@ FastEmbed may need internet access to download the model the first time. Once
 the model is available in its local cache, it generally does not need to be
 downloaded again.
 
-Qdrant stores and searches vectors; it does not create embeddings. This demo
-does not use a generative LLM to write its response: the HR side retrieves
-policy text, and the supervisor formats that context together with the IT
-workflow result.
+Qdrant stores and searches vectors; it does not create embeddings. The HR
+agent retrieves policy text from the Qdrant service shared with RAG-Layered.
+The IT agent sends the user request, selected employee and ticket fields, and
+retrieved HR context to RAG-Layered's LiteLLM gateway for a Gemini-generated
+summary. The IT agent's database lookups and ticket creation remain local
+deterministic tool calls; the model does not execute tools or approve the
+request. Configure `LLM_GATEWAY_URL`, `LLM_MODEL`, and `LLM_API_KEY` in the
+local `.env`; the API key must match the gateway key in `RAG-Layered/.env`.
+`GEMINI_API_KEY` stays in RAG-Layered's `.env`, where the gateway reads it.
 
 ## Diagnosing the old Windows block
 

@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "MCP-Basic": {
+      "type": "stdio",
+      "command": "${workspaceFolder}\\rag_service\\Scripts\\python.exe",
+      "args": [
+        "${workspaceFolder}\\..\\..\\MCP-Basic\\server.py"
+      ]
+    }
+  }
+}

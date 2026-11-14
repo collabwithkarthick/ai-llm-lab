@@ -70,6 +70,24 @@ Run these commands from the `RAG-Basic` project directory.
    Or run `python rag_service.py` to enter a question interactively. Answering
    requires network access and makes Gemini embedding and chat API calls.
 
+## Three-agent workflow
+
+The [multi-agent example](multi-agent/README.md) runs a Researcher, Writer, and
+Reviewer over the configured document source. From this project directory, run:
+
+```powershell
+python .\multi-agent\main.py "What does the laptop policy say?"
+```
+
+It uses the same API key, document source, and Gemini model settings as the RAG
+service.
+
+## MCP server
+
+The [MCP-Basic example](../../MCP-Basic/README.md) provides a Python MCP server with
+two tools and one resource, plus instructions for testing it with MCP Inspector
+and connecting it to VS Code.
+
 ## Configure the knowledge source
 
 The default value of `RAG_DOCUMENT_DIR` in `.env.example` points to

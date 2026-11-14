@@ -72,14 +72,17 @@ class SupervisorAgent:
         user_input = state["user_input"]
         self._add_log(state, "Dispatching IT employee lookup and ticket action.")
         try:
-            result = self.it_agent.run(user_input)
-            if result.get("status") == "success":
+            result = self.it_agent.run(user_input, hr_context=state.get("hr_context", ""))
+            if result.get("status") in {"success", "partial_success"}:
                 state["it_context"] = (
                     f"Employee record: {result['employee']}\n\n"
                     f"Ticket outcome: {result['ticket']}\n\n"
                     f"Summary: {result['summary']}"
                 )
-                self._add_log(state, "IT action completed successfully.")
+                if result.get("status") == "partial_success":
+                    self._add_log(state, result.get("error", "Ticket created but LLM summary failed."))
+                else:
+                    self._add_log(state, "IT action completed successfully.")
             else:
                 state["it_context"] = result.get("summary", "IT workflow did not produce a result.")
                 self._add_log(state, f"IT workflow issue: {result.get('error', 'unknown error')}")
