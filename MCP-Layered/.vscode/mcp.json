@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "MCP-Basic": {
+      "type": "stdio",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+      "args": ["${workspaceFolder}\\server.py"]
+    },
+    "MCP-Basic-HTTP": {
+      "type": "http",
+      "url": "http://127.0.0.1:8000/mcp"
+    }
+  }
+}
+  
