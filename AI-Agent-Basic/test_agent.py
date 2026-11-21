@@ -9,7 +9,16 @@ from unittest.mock import patch
 import httpx
 from ddgs.exceptions import DDGSException
 
-from agent import AgentError, FileReader, ReActAgent, SafeCalculator, ToolError, WebSearch
+from agent import (
+    AgentError,
+    FileReader,
+    ReActAgent,
+    SafeCalculator,
+    SkillDispatcher,
+    ToolError,
+    WebSearch,
+    create_tools,
+)
 
 
 class FakeModel:
@@ -46,6 +55,45 @@ class CalculatorTests(unittest.TestCase):
 
 
 class ReActTests(unittest.TestCase):
+    def test_dispatches_both_skills_and_uses_their_workflow(self) -> None:
+        dispatcher = SkillDispatcher()
+        model = FakeModel(
+            [
+                action("Load the route workflow.", "dispatch_skill", {"name": "route-conversion"}),
+                action("Load source research instructions.", "dispatch_skill", {"name": "source-verification"}),
+                action("Read the route distance.", "read_file", {"path": "data/route_notes.txt"}),
+                action(
+                    "Verify the conversion factor.",
+                    "web_search",
+                    {"query": "kilometers to miles conversion factor"},
+                ),
+                action("Convert and round the distance.", "calculate", {"expression": "round(62.5 * 0.621371, 1)"}),
+                action(
+                    "Report the verified result.",
+                    "final",
+                    {"answer": "62.5 km is approximately 38.8 miles. Source: https://example.com/conversion"},
+                ),
+            ]
+        )
+        tools = create_tools(dispatcher)
+        tools["web_search"] = lambda _: [
+            {"title": "Conversion", "url": "https://example.com/conversion", "snippet": "1 km = 0.621371 miles"}
+        ]
+        output = StringIO()
+        with redirect_stdout(output):
+            answer = ReActAgent(
+                model,
+                tools,
+                skills=dispatcher.catalog,
+                sleep=lambda _: None,
+            ).run("Convert and verify the route distance.")
+
+        self.assertIn("38.8 miles", answer)
+        self.assertIn("Action: dispatch_skill", output.getvalue())
+        self.assertIn("route-conversion", model.prompts[0])
+        self.assertIn("source-verification", model.prompts[0])
+        self.assertIn("Use `read_file`", model.prompts[2])
+
     def test_performs_file_search_calculation_and_returns_final_answer(self) -> None:
         model = FakeModel(
             [
@@ -142,6 +190,23 @@ class ToolTests(unittest.TestCase):
         self.assertEqual(results[0]["title"], "Conversion")
         self.assertEqual(mock_ddgs.return_value.text.call_count, 2)
         mock_sleep.assert_called_once_with(0.5)
+
+    def test_skill_dispatcher_exposes_and_loads_skills(self) -> None:
+        dispatcher = SkillDispatcher()
+
+        self.assertEqual(
+            set(dispatcher.catalog),
+            {"route-conversion", "source-verification"},
+        )
+        skill = dispatcher.dispatch("route-conversion")
+        self.assertIn("read_file", skill["instructions"])
+        self.assertIn("calculate", skill["instructions"])
+
+    def test_skill_dispatcher_rejects_unknown_skills(self) -> None:
+        dispatcher = SkillDispatcher()
+
+        with self.assertRaisesRegex(ToolError, "Unknown skill"):
+            dispatcher.dispatch("../../data/route_notes.txt")
 
 
 if __name__ == "__main__":

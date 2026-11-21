@@ -58,18 +58,26 @@ accepts `GOOGLE_API_KEY` or `LLM_API_KEY` as environment variables. You can
 optionally change `GEMINI_MODEL` in `.env`; by default it uses
 `gemini-2.5-flash`.
 
-## 5. Run the agent
+## 5. Run the agent with skills and dispatcher
 
-For example, ask it to use the sample route notes, search for the conversion
-factor, and calculate the distance in miles:
+The `skills/` directory contains two `SKILL.md` workflows:
+
+- `route-conversion` reads the route notes and calculates the converted distance.
+- `source-verification` searches for and cites the conversion factor.
+
+The agent lists each skill's name and description in its prompt. Gemini uses the
+`dispatch_skill` action to load the relevant `SKILL.md` instructions, then uses
+the allowlisted tools to complete the workflow. This example exercises both
+skills:
 
 ```powershell
-python .\agent.py --task "Read data/route_notes.txt, find the kilometers-to-miles conversion factor, calculate the distance in miles, and round it to one decimal place."
+python .\agent.py --task "Use both the route-conversion and source-verification skills to convert data/route_notes.txt from kilometers to miles, verify the factor with a web source, round to one decimal place, and cite the source."
 ```
 
-The agent prints its steps and tool observations, then prints the final answer.
-It can use only the `read_file`, `web_search`, and `calculate` tools. File reads
-are restricted to the project's `data` directory.
+The agent prints its steps and tool observations, including each dispatched
+skill, then prints the final answer. It can use only `dispatch_skill`,
+`read_file`, `web_search`, and `calculate`. File reads are restricted to the
+project's `data` directory.
 
 Useful options:
 

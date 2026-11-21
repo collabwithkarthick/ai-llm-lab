@@ -1,12 +1,12 @@
 # Project Flow
 
-This project is a compact, single-file ReAct agent built in [agent.py](./agent.py). The basic idea is:
+This project is a compact ReAct agent built in [agent.py](./agent.py). The basic idea is:
 
 1. The CLI starts the program.
 2. It loads the Gemini API key from the environment or a `.env` file.
-3. It creates the LLM client plus the three allowed tools.
+3. It discovers `SKILL.md` files, then creates the LLM client plus the dispatcher and three allowed tools.
 4. The agent runs a bounded Thought -> Action -> Observation loop.
-5. The model chooses one tool or a final answer, then the result is fed back into the next prompt.
+5. The model dispatches relevant skills to load their workflow instructions, then chooses a tool or final answer.
 6. The agent stops when the model produces a final answer or when the step limit is reached.
 
 ## End-to-end flow
@@ -15,8 +15,12 @@ This project is a compact, single-file ReAct agent built in [agent.py](./agent.p
 - `load_dotenv()` loads the project environment file.
 - `_make_agent()` creates:
   - `GeminiModel(api_key, model_name)`
-  - `create_tools()`
+  - `SkillDispatcher()` and `create_tools(dispatcher)`
   - `ReActAgent(...)`
+- `SkillDispatcher`
+  - discovers skills under `skills/<name>/SKILL.md`
+  - exposes skill names and descriptions to the model
+  - loads instructions only when `dispatch_skill` is called
 - `ReActAgent.run(task)` starts the loop.
 - Each iteration calls `_prompt(task, history)` to build a JSON-format response contract.
 - `_generate_with_retries()` sends the prompt to Gemini with retry logic.
@@ -42,8 +46,8 @@ This project is a compact, single-file ReAct agent built in [agent.py](./agent.p
   - forces JSON output via `GenerateContentConfig(response_mime_type="application/json")`
 
 - `create_tools()`
-  - instantiates the tool classes
-  - exposes three handlers: `read_file`, `web_search`, and `calculate`
+  - instantiates the tool classes and skill dispatcher handler
+  - exposes `dispatch_skill`, `read_file`, `web_search`, and `calculate`
 
 - `FileReader.read(relative_path)`
   - only allows reads under `data/`
@@ -82,7 +86,9 @@ flowchart TD
     A["main() <br/> parse args + load .env"] --> B["_make_agent()"]
     B --> C["GeminiModel.generate()"]
     B --> D["create_tools()"]
+    B --> S["SkillDispatcher <br/> discover SKILL.md files"]
 
+    D --> S1["dispatch_skill"]
     D --> E["read_file handler <br/> FileReader.read()"]
     D --> F["web_search handler <br/> WebSearch.search()"]
     D --> G["calculate handler <br/> SafeCalculator.calculate()"]
@@ -96,7 +102,7 @@ flowchart TD
     K -->|Yes| M{"action == final?"}
 
     M -->|Yes| N["Return final answer"]
-    M -->|No| O["Tool execution <br/> read_file / web_search / calculate"]
+    M -->|No| O["Tool execution <br/> dispatch_skill / read_file / web_search / calculate"]
     O --> P["Observation result"]
     P --> Q["history.append(...)"]
     Q --> H

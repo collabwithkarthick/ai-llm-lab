@@ -17,6 +17,15 @@ transient failures at most three times with exponential backoff. Tool errors
 are returned to the agent as observations; invalid model responses can be
 corrected in a subsequent step.
 
+## Skills and dispatcher
+
+The `skills/` directory contains two `SKILL.md` workflows: `route-conversion`
+and `source-verification`. The agent presents their names and descriptions to
+Gemini. Gemini invokes `dispatch_skill` to load workflow instructions as needed,
+then executes the existing allowlisted tools. Add a skill by creating a folder
+with a `SKILL.md` containing `name` and `description` metadata followed by its
+instructions; the name must match the folder name.
+
 ## Setup
 
 From `D:\assignments\Agent-Basic`:
@@ -35,12 +44,12 @@ in the process environment.
 ## Run a multi-step task
 
 ```powershell
-python .\agent.py --task "Read data/route_notes.txt, search the web for the number of miles in one kilometer, calculate the route distance in miles rounded to one decimal place, and explain the result."
+python .\agent.py --task "Use both the route-conversion and source-verification skills to convert data/route_notes.txt from kilometers to miles, verify the factor with a web source, round to one decimal place, and cite the source."
 ```
 
 The program prints each step's thought, action, and observation, followed by the
 final answer. The route notes and search results are treated as untrusted data,
-and the agent cannot use tools beyond the three listed above.
+and the agent cannot use tools beyond the dispatcher and three listed tools.
 
 ## Tests
 
